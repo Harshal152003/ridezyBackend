@@ -3,7 +3,7 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     await dbConnect();
     const user = verifyToken(req);
 
@@ -12,7 +12,8 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     try {
-        const staffId = params.id;
+        const { id } = await params;
+        const staffId = id;
 
         // Ensure the staff belongs to this center
         const staff = await User.findOne({
