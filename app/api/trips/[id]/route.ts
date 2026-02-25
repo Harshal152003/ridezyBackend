@@ -52,6 +52,29 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                     fare: trip.price
                 };
             }
+        } else if (trip.status === 'OPEN' && trip.interestedDrivers && trip.interestedDrivers.length > 0) {
+            // Fetch interested drivers array details
+            const drivers = await User.find({ _id: { $in: trip.interestedDrivers } }).lean();
+            const driverProfiles = await DriverProfile.find({ userId: { $in: trip.interestedDrivers } }).populate('vehicleId').lean();
+
+            trip.interestedDriversDetails = drivers.map(dUser => {
+                const dProfile = driverProfiles.find(p => p.userId.toString() === dUser._id.toString());
+                return {
+                    id: dUser._id,
+                    name: dUser.full_name || 'Driver',
+                    avatar: dProfile?.documents?.photo || '👨‍✈️',
+                    rating: 4.8, // Mock
+                    reviews: 120, // Mock
+                    experience: `${dProfile?.experienceYears || 0} years`,
+                    vehicleModel: dProfile?.vehicleId?.model || 'Unknown Car',
+                    vehicleNumber: dProfile?.vehicleId?.plateNumber || dProfile?.licenseNumber,
+                    vehicleColor: dProfile?.vehicleId?.color || 'White',
+                    eta: '5 min', // Mock
+                    phone: dUser.phone,
+                    features: ['AC', 'Music'], // Mock
+                    fare: trip.price
+                };
+            });
         }
 
         return NextResponse.json({ trip });

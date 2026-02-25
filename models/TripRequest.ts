@@ -41,6 +41,10 @@ const TripRequestSchema = new mongoose.Schema({
         ref: 'User',
         default: null,
     },
+    interestedDrivers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     price: { type: Number },
 }, { timestamps: true });
 
