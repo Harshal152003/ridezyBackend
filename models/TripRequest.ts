@@ -33,7 +33,7 @@ const TripRequestSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['OPEN', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'],
+        enum: ['OPEN', 'ACCEPTED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'],
         default: 'OPEN',
     },
     driverId: {
@@ -42,6 +42,10 @@ const TripRequestSchema = new mongoose.Schema({
         default: null,
     },
     interestedDrivers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    ignoredBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],

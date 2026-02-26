@@ -64,7 +64,11 @@ export async function GET(req: Request) {
         };
 
         // 3. fetch driver profile for extra details if needed
-        const driverProfile = await User.findById(driverId).select('name email avatar vehicle');
+        const userDoc = await User.findById(driverId).select('name full_name email avatar phone vehicle');
+
+        // Fetch DriverProfile to get documents
+        const DriverProfileModel = require('@/models/DriverProfile').default;
+        const driverProfileDoc = await DriverProfileModel.findOne({ userId: driverId }).lean();
 
         // 4. Recent Activities (from actual trips)
         const recentActivities = completedTrips.slice(0, 5).map(trip => ({
@@ -81,7 +85,8 @@ export async function GET(req: Request) {
         return NextResponse.json({
             success: true,
             driverProfile: {
-                ...driverProfile.toObject(),
+                ...userDoc?.toObject(),
+                ...driverProfileDoc, // Merge driver profile to include documents, licenseUrl, etc
                 rating: 4.8, // Default or fetch from profile if added
                 totalTrips
             },

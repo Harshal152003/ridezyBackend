@@ -23,14 +23,22 @@ export async function GET(req: Request) {
         const owners = await User.find({ _id: { $in: ownerIds } }).select('full_name phone').lean();
         const ownerMap = Object.fromEntries(owners.map((o: any) => [o._id.toString(), o]));
 
-        const enriched = trips.map((t: any) => ({
-            ...t,
-            ownerId: {
-                _id: t.ownerId,
-                name: ownerMap[t.ownerId?.toString()]?.full_name || 'Owner',
-                phone: ownerMap[t.ownerId?.toString()]?.phone || null,
-            }
-        }));
+        const enriched = trips.map((t: any) => {
+            // Mock Distance/Time for now until map API integration
+            const distance = t.distance || Math.floor(Math.random() * 15) + 3; // 3 to 18 km
+            const estimatedTime = t.estimatedTime || Math.floor(distance * 3); // ~3 min per km
+
+            return {
+                ...t,
+                distance,
+                estimatedTime,
+                ownerId: {
+                    _id: t.ownerId,
+                    name: ownerMap[t.ownerId?.toString()]?.full_name || 'Owner',
+                    phone: ownerMap[t.ownerId?.toString()]?.phone || null,
+                }
+            };
+        });
 
         return NextResponse.json({ trips: enriched });
     } catch (error: any) {

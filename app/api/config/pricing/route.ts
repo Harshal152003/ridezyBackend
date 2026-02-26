@@ -8,6 +8,7 @@ export async function GET() {
             {
                 id: 'sedan',
                 icon: '🚗',
+                priceMultiplier: 1.0,
                 pricePerKm: 15,
                 capacity: '4 seats',
                 features: ['AC', 'Comfortable', 'Standard Baggage']
@@ -15,6 +16,7 @@ export async function GET() {
             {
                 id: 'suv',
                 icon: '🚙',
+                priceMultiplier: 1.5,
                 pricePerKm: 20,
                 capacity: '6 seats',
                 features: ['AC', 'Extra Legroom', 'Large Baggage']
@@ -22,6 +24,7 @@ export async function GET() {
             {
                 id: 'hatchback',
                 icon: '🚕',
+                priceMultiplier: 0.9,
                 pricePerKm: 12,
                 capacity: '4 seats',
                 features: ['AC', 'Compact City Ride']
@@ -29,6 +32,7 @@ export async function GET() {
             {
                 id: 'luxury',
                 icon: '🚘',
+                priceMultiplier: 2.5,
                 pricePerKm: 40,
                 capacity: '4 seats',
                 features: ['Premium Comfort', 'Top Rated Drivers', 'Water Bottle']

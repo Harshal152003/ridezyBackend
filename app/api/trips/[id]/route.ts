@@ -39,13 +39,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 trip.driver = {
                     id: driverUser._id,
                     name: driverUser.full_name || 'Driver', // Fallback
-                    avatar: driverProfile.documents?.photo || '👨‍✈️',
+                    avatar: driverUser.avatar || driverProfile.documents?.photo || '👨‍✈️',
                     rating: 4.8, // Mock or fetch from ratings model if exists
                     reviews: 120, // Mock
                     experience: `${driverProfile.experienceYears} years`,
                     vehicleModel: driverProfile.vehicleId?.model || 'Unknown Car',
                     vehicleNumber: driverProfile.vehicleId?.plateNumber || driverProfile.licenseNumber,
                     vehicleColor: driverProfile.vehicleId?.color || 'White',
+                    documents: {
+                        license: driverProfile?.licenseUrl || null,
+                        aadhaar: driverProfile?.documents?.aadharCard || null,
+                    },
                     eta: '5 min', // Real-time calculation or mock
                     phone: driverUser.phone,
                     features: ['AC', 'Music'], // Mock
@@ -62,13 +66,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 return {
                     id: dUser._id,
                     name: dUser.full_name || 'Driver',
-                    avatar: dProfile?.documents?.photo || '👨‍✈️',
+                    avatar: dUser.avatar || dProfile?.documents?.photo || '👨‍✈️',
                     rating: 4.8, // Mock
                     reviews: 120, // Mock
                     experience: `${dProfile?.experienceYears || 0} years`,
                     vehicleModel: dProfile?.vehicleId?.model || 'Unknown Car',
                     vehicleNumber: dProfile?.vehicleId?.plateNumber || dProfile?.licenseNumber,
                     vehicleColor: dProfile?.vehicleId?.color || 'White',
+                    documents: {
+                        license: dProfile?.licenseUrl || null,
+                        aadhaar: dProfile?.documents?.aadharCard || null,
+                    },
                     eta: '5 min', // Mock
                     phone: dUser.phone,
                     features: ['AC', 'Music'], // Mock
@@ -103,15 +111,38 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         // Only allowed roles should update
         // We assume driver or owner can update for now (Cancel/Start/Complete)
-        if (trip.driverId?.toString() !== user.userId && trip.ownerId?.toString() !== user.userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        // EXCEPTION: A driver can update an OPEN trip to ACCEPT or DECLINE it.
+        const isRequestingDriver = user.role === 'DRIVER';
+        const isTripOpen = trip.status === 'OPEN';
+
+        if (
+            trip.driverId?.toString() !== user.userId &&
+            trip.ownerId?.toString() !== user.userId &&
+            !(isRequestingDriver && isTripOpen)
+        ) {
+            return NextResponse.json({ error: 'Unauthorized to update this trip' }, { status: 403 });
+        }
+
+        if (status === 'DECLINED') {
+            // Driver declined an open trip: Add to ignored array instead of cancelling globally
+            if (!trip.ignoredBy) {
+                trip.ignoredBy = [];
+            }
+            if (!trip.ignoredBy.includes(user.userId)) {
+                trip.ignoredBy.push(user.userId);
+            }
+            // Do not actually change the status, keep it OPEN for others
+            await trip.save();
+            return NextResponse.json({ success: true, trip });
         }
 
         if (status) {
+            console.log(`Updating trip ${id} status from ${trip.status} to ${status}`);
             trip.status = status;
         }
 
         await trip.save();
+        console.log(`Trip ${id} updated successfully`);
 
         return NextResponse.json({ success: true, trip });
     } catch (error: any) {
