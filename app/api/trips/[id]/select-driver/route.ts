@@ -37,7 +37,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
 
         // Ensure the selected driver is actually in the interested list
-        const interestedStr = (trip.interestedDrivers || []).map(id => id.toString());
+        const interestedStr = (trip.interestedDrivers || []).map((id: any) => id.toString());
         if (!interestedStr.includes(driverId.toString())) {
             return NextResponse.json({ error: 'Driver is not in the interested list' }, { status: 400 });
         }
